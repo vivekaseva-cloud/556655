@@ -1,0 +1,7 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /admin
+
+# Neti Bharatam Sitemap
+Sitemap: https://netibharatam.com/sitemap.xml

@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix ఏది నిజం (Edi Nijam) - Multilingual India News Portal",
+  "description": "ఏది నిజం (Edi Nijam) — ఒక దేశం ఒకే చట్టం. National, State, District \u0026 Mandal News Portal in Telugu, Hindi, and English with YouTube Video Updates, Mandal Reporter Dashboard, Targeted Private Ads, and Admin Control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

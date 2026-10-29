@@ -1,0 +1,392 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn() && (request.auth.token.email == 'viveka.seva@gmail.com' || request.auth.token.email == 'howtolivetherealman@gmail.com');
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // Validation Helpers
+    function isValidAdminRecord(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'createdAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 254 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidNewsArticle(data) {
+      return data.keys().hasAll([
+        'titleTe', 'titleHi', 'titleEn',
+        'summaryTe', 'summaryHi', 'summaryEn',
+        'contentTe', 'contentHi', 'contentEn',
+        'level', 'state', 'district', 'mandal', 'category',
+        'youtubeUrl', 'imageType', 'reporterId', 'reporterName',
+        'views', 'status', 'authorUid', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'titleTe', 'titleHi', 'titleEn',
+        'summaryTe', 'summaryHi', 'summaryEn',
+        'contentTe', 'contentHi', 'contentEn',
+        'level', 'state', 'district', 'mandal', 'category',
+        'youtubeUrl', 'imageType', 'reporterId', 'reporterName',
+        'views', 'status', 'authorUid', 'createdAt', 'updatedAt'
+      ]) &&
+      data.titleTe is string && data.titleTe.size() >= 3 && data.titleTe.size() <= 300 &&
+      data.titleHi is string && data.titleHi.size() >= 3 && data.titleHi.size() <= 300 &&
+      data.titleEn is string && data.titleEn.size() >= 3 && data.titleEn.size() <= 300 &&
+      data.summaryTe is string && data.summaryTe.size() >= 5 && data.summaryTe.size() <= 600 &&
+      data.summaryHi is string && data.summaryHi.size() >= 5 && data.summaryHi.size() <= 600 &&
+      data.summaryEn is string && data.summaryEn.size() >= 5 && data.summaryEn.size() <= 600 &&
+      data.contentTe is string && data.contentTe.size() >= 10 && data.contentTe.size() <= 8000 &&
+      data.contentHi is string && data.contentHi.size() >= 10 && data.contentHi.size() <= 8000 &&
+      data.contentEn is string && data.contentEn.size() >= 10 && data.contentEn.size() <= 8000 &&
+      data.level is string && data.level.size() <= 20 && (data.level in ['national', 'state', 'district', 'mandal']) &&
+      data.state is string && data.state.size() >= 2 && data.state.size() <= 100 &&
+      data.district is string && data.district.size() >= 2 && data.district.size() <= 100 &&
+      data.mandal is string && data.mandal.size() >= 2 && data.mandal.size() <= 100 &&
+      data.category is string && data.category.size() <= 30 && (data.category in ['politics', 'agriculture', 'crime', 'education', 'business', 'local', 'justice']) &&
+      data.youtubeUrl is string && data.youtubeUrl.size() <= 300 &&
+      data.imageType is string && data.imageType.size() <= 60 &&
+      data.reporterId is string && data.reporterId.size() >= 1 && data.reporterId.size() <= 128 && data.reporterId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.reporterName is string && data.reporterName.size() >= 2 && data.reporterName.size() <= 120 &&
+      data.views is int && data.views >= 0 &&
+      data.status is string && data.status.size() <= 20 && (data.status in ['pending', 'approved', 'rejected']) &&
+      data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128 && data.authorUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidPublicReporterProfile(data) {
+      return data.keys().hasAll([
+        'name', 'username', 'state', 'district', 'mandal',
+        'photoDataUrl', 'status', 'ownerUid', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'name', 'username', 'state', 'district', 'mandal',
+        'photoDataUrl', 'status', 'ownerUid', 'createdAt', 'updatedAt'
+      ]) &&
+      data.name is string && data.name.size() >= 2 && data.name.size() <= 120 &&
+      data.username is string && data.username.size() >= 3 && data.username.size() <= 60 && data.username.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.state is string && data.state.size() >= 2 && data.state.size() <= 100 &&
+      data.district is string && data.district.size() >= 2 && data.district.size() <= 100 &&
+      data.mandal is string && data.mandal.size() >= 2 && data.mandal.size() <= 100 &&
+      data.photoDataUrl is string && data.photoDataUrl.size() <= 150000 &&
+      data.status is string && data.status.size() <= 20 && (data.status in ['pending', 'approved', 'rejected']) &&
+      data.ownerUid is string && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128 && data.ownerUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidPrivateReporterApplication(data) {
+      return data.keys().hasAll([
+        'name', 'username', 'passwordHash', 'mobile', 'aadhaarNumber',
+        'aadhaarDocName', 'aadhaarDocDataUrl', 'state', 'district', 'mandal', 'photoDataUrl',
+        'status', 'ownerUid', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'name', 'username', 'passwordHash', 'mobile', 'aadhaarNumber',
+        'aadhaarDocName', 'aadhaarDocDataUrl', 'state', 'district', 'mandal', 'photoDataUrl',
+        'status', 'ownerUid', 'createdAt', 'updatedAt'
+      ]) &&
+      data.name is string && data.name.size() >= 2 && data.name.size() <= 120 &&
+      data.username is string && data.username.size() >= 3 && data.username.size() <= 60 && data.username.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.passwordHash is string && data.passwordHash.size() >= 4 && data.passwordHash.size() <= 128 &&
+      data.mobile is string && data.mobile.size() >= 10 && data.mobile.size() <= 15 && data.mobile.matches('^[0-9+\\-]+$') &&
+      data.aadhaarNumber is string && data.aadhaarNumber.size() >= 12 && data.aadhaarNumber.size() <= 16 && data.aadhaarNumber.matches('^[0-9\\s\\-]+$') &&
+      data.aadhaarDocName is string && data.aadhaarDocName.size() >= 1 && data.aadhaarDocName.size() <= 200 &&
+      data.aadhaarDocDataUrl is string && data.aadhaarDocDataUrl.size() <= 150000 &&
+      data.state is string && data.state.size() >= 2 && data.state.size() <= 100 &&
+      data.district is string && data.district.size() >= 2 && data.district.size() <= 100 &&
+      data.mandal is string && data.mandal.size() >= 2 && data.mandal.size() <= 100 &&
+      data.photoDataUrl is string && data.photoDataUrl.size() <= 150000 &&
+      data.status is string && data.status.size() <= 20 && (data.status in ['pending', 'approved', 'rejected']) &&
+      data.ownerUid is string && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128 && data.ownerUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidPrivateAd(data) {
+      return data.keys().hasAll([
+        'title', 'sponsorName', 'targetLevel', 'state', 'district', 'mandal',
+        'category', 'ctaUrl', 'bannerText', 'status', 'ownerUid', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'title', 'sponsorName', 'targetLevel', 'state', 'district', 'mandal',
+        'category', 'ctaUrl', 'bannerText', 'status', 'ownerUid', 'createdAt', 'updatedAt'
+      ]) &&
+      data.title is string && data.title.size() >= 3 && data.title.size() <= 160 &&
+      data.sponsorName is string && data.sponsorName.size() >= 2 && data.sponsorName.size() <= 120 &&
+      data.targetLevel is string && data.targetLevel.size() <= 20 && (data.targetLevel in ['national', 'state', 'district', 'mandal']) &&
+      data.state is string && data.state.size() >= 2 && data.state.size() <= 100 &&
+      data.district is string && data.district.size() >= 2 && data.district.size() <= 100 &&
+      data.mandal is string && data.mandal.size() >= 2 && data.mandal.size() <= 100 &&
+      data.category is string && data.category.size() <= 30 && (data.category in ['all', 'politics', 'agriculture', 'crime', 'education', 'business', 'local', 'justice']) &&
+      data.ctaUrl is string && data.ctaUrl.size() <= 300 &&
+      data.bannerText is string && data.bannerText.size() >= 5 && data.bannerText.size() <= 500 &&
+      data.status is string && data.status.size() <= 20 && (data.status in ['pending', 'approved', 'rejected']) &&
+      data.ownerUid is string && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128 && data.ownerUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidUserFeedback(data) {
+      return data.keys().hasAll([
+        'readerName', 'mandal', 'rating', 'message', 'category', 'ownerUid', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'readerName', 'mandal', 'rating', 'message', 'category', 'ownerUid', 'createdAt'
+      ]) &&
+      data.readerName is string && data.readerName.size() >= 2 && data.readerName.size() <= 100 &&
+      data.mandal is string && data.mandal.size() >= 2 && data.mandal.size() <= 100 &&
+      data.rating is int && data.rating >= 1 && data.rating <= 5 &&
+      data.message is string && data.message.size() >= 5 && data.message.size() <= 1000 &&
+      data.category is string && data.category.size() >= 2 && data.category.size() <= 50 &&
+      data.ownerUid is string && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128 && data.ownerUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.createdAt is timestamp;
+    }
+
+    function isValidSiteConfig(data) {
+      return data.keys().hasAll([
+        'adsenseClientId', 'adsenseSlotId', 'adsenseScriptUrl',
+        'adsenseEnabled', 'updatedByUid', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'adsenseClientId', 'adsenseSlotId', 'adsenseScriptUrl',
+        'adsenseEnabled', 'updatedByUid', 'updatedAt'
+      ]) &&
+      data.adsenseClientId is string && data.adsenseClientId.size() <= 100 &&
+      data.adsenseSlotId is string && data.adsenseSlotId.size() <= 100 &&
+      data.adsenseScriptUrl is string && data.adsenseScriptUrl.size() <= 300 &&
+      data.adsenseEnabled is bool &&
+      data.updatedByUid is string && data.updatedByUid.size() >= 1 && data.updatedByUid.size() <= 128 && data.updatedByUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidCustomLocation(data) {
+      return data.keys().hasAll([
+        'state', 'district', 'districtLabelTe', 'mandal', 'createdByUid', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'state', 'district', 'districtLabelTe', 'mandal', 'createdByUid', 'createdAt'
+      ]) &&
+      data.state is string && data.state.size() >= 2 && data.state.size() <= 100 &&
+      data.district is string && data.district.size() >= 2 && data.district.size() <= 100 &&
+      data.districtLabelTe is string && data.districtLabelTe.size() <= 100 &&
+      data.mandal is string && data.mandal.size() >= 2 && data.mandal.size() <= 100 &&
+      data.createdByUid is string && data.createdByUid.size() >= 1 && data.createdByUid.size() <= 128 && data.createdByUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.createdAt is timestamp;
+    }
+
+    // 1. Admins Collection
+    match /admins/{adminUid} {
+      allow get: if isSignedIn() && isValidId(adminUid) && (request.auth.uid == adminUid || isAdmin());
+      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(adminUid) && isValidAdminRecord(incoming()) &&
+        incoming().uid == request.auth.uid && incoming().createdAt == request.time && isBootstrappedAdmin();
+      allow update: if isSignedIn() && isValidId(adminUid) && isValidAdminRecord(incoming()) &&
+        incoming().uid == existing().uid && incoming().createdAt == existing().createdAt && isBootstrappedAdmin();
+      allow delete: if isSignedIn() && isValidId(adminUid) && isBootstrappedAdmin();
+    }
+
+    // 2. News Articles Collection
+    match /news/{newsId} {
+      allow get: if isValidId(newsId) && (existing().status == 'approved' || (isSignedIn() && (existing().authorUid == request.auth.uid || isAdmin())));
+      allow list: if resource.data.status == 'approved' || (isSignedIn() && resource.data.authorUid == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(newsId) && isValidNewsArticle(incoming()) &&
+        incoming().authorUid == request.auth.uid &&
+        incoming().views == 0 &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            exists(/databases/$(database)/documents/reporterDirectory/$(incoming().reporterId)) &&
+            get(/databases/$(database)/documents/reporterDirectory/$(incoming().reporterId)).data.ownerUid == request.auth.uid &&
+            get(/databases/$(database)/documents/reporterDirectory/$(incoming().reporterId)).data.status == 'approved' &&
+            get(/databases/$(database)/documents/reporterDirectory/$(incoming().reporterId)).data.state == incoming().state &&
+            get(/databases/$(database)/documents/reporterDirectory/$(incoming().reporterId)).data.district == incoming().district &&
+            get(/databases/$(database)/documents/reporterDirectory/$(incoming().reporterId)).data.mandal == incoming().mandal
+          )
+        );
+      allow update: if isSignedIn() && isValidId(newsId) && isValidNewsArticle(incoming()) &&
+        incoming().authorUid == existing().authorUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            existing().status == 'approved' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['views', 'updatedAt']) &&
+            incoming().views == existing().views + 1
+          ) ||
+          (
+            existing().authorUid == request.auth.uid &&
+            existing().status != 'rejected' &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'titleTe', 'titleHi', 'titleEn',
+              'summaryTe', 'summaryHi', 'summaryEn',
+              'contentTe', 'contentHi', 'contentEn',
+              'youtubeUrl', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isSignedIn() && isValidId(newsId) && isAdmin();
+    }
+
+    // 3. Public Reporter Directory (Zero PII)
+    match /reporterDirectory/{reporterId} {
+      allow get: if isValidId(reporterId) && (existing().status == 'approved' || (isSignedIn() && (existing().ownerUid == request.auth.uid || isAdmin())));
+      allow list: if resource.data.status == 'approved' || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(reporterId) && isValidPublicReporterProfile(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().status == 'pending' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/reporterApplications/$(reporterId));
+      allow update: if isSignedIn() && isValidId(reporterId) && isValidPublicReporterProfile(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            existing().ownerUid == request.auth.uid &&
+            existing().status == 'pending' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'photoDataUrl', 'updatedAt'])
+          )
+        );
+      allow delete: if isSignedIn() && isValidId(reporterId) && isAdmin();
+    }
+
+    // 4. Private Reporter Applications (PII Isolated: Aadhaar & Mobile)
+    match /reporterApplications/{appId} {
+      allow get: if isSignedIn() && isValidId(appId) && (existing().ownerUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(appId) && isValidPrivateReporterApplication(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().status == 'pending' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/reporterDirectory/$(appId));
+      allow update: if isSignedIn() && isValidId(appId) && isValidPrivateReporterApplication(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            existing().ownerUid == request.auth.uid &&
+            existing().status == 'pending' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'mobile', 'photoDataUrl', 'aadhaarDocDataUrl', 'updatedAt'])
+          )
+        );
+      allow delete: if isSignedIn() && isValidId(appId) && isAdmin();
+    }
+
+    // 5. Private Advertisements Collection
+    match /ads/{adId} {
+      allow get: if isValidId(adId) && (existing().status == 'approved' || (isSignedIn() && (existing().ownerUid == request.auth.uid || isAdmin())));
+      allow list: if resource.data.status == 'approved' || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if isSignedIn() && isValidId(adId) && isValidPrivateAd(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().status == 'pending' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(adId) && isValidPrivateAd(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            existing().ownerUid == request.auth.uid &&
+            existing().status == 'pending' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['title', 'bannerText', 'ctaUrl', 'updatedAt'])
+          )
+        );
+      allow delete: if isSignedIn() && isValidId(adId) && isAdmin();
+    }
+
+    // 6. User Feedback Collection
+    match /feedback/{feedbackId} {
+      allow get: if isSignedIn() && isValidId(feedbackId) && (existing().ownerUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(feedbackId) && isValidUserFeedback(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().createdAt == request.time;
+      allow update: if isSignedIn() && isValidId(feedbackId) && isValidUserFeedback(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        isAdmin();
+      allow delete: if isSignedIn() && isValidId(feedbackId) && isAdmin();
+    }
+
+    // 7. Site Settings (Google AdSense Config)
+    match /siteSettings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if resource.data.adsenseEnabled == true || isSignedIn();
+      allow create: if isSignedIn() && isValidId(settingId) && isValidSiteConfig(incoming()) &&
+        incoming().updatedByUid == request.auth.uid &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isSignedIn() && isValidId(settingId) && isValidSiteConfig(incoming()) &&
+        incoming().updatedByUid == request.auth.uid &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            isBootstrappedAdmin() &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'adsenseClientId', 'adsenseSlotId', 'adsenseScriptUrl',
+              'adsenseEnabled', 'updatedByUid', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isSignedIn() && isValidId(settingId) && isAdmin();
+    }
+
+    // 8. Custom Locations Collection (Admin-Added Districts & Mandals per State)
+    match /customLocations/{locationId} {
+      allow get: if isValidId(locationId);
+      allow list: if resource.data.state is string && resource.data.state.size() >= 2;
+      allow create: if isSignedIn() && isValidId(locationId) && isValidCustomLocation(incoming()) &&
+        incoming().createdByUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update: if isSignedIn() && isValidId(locationId) && isValidCustomLocation(incoming()) &&
+        incoming().createdByUid == existing().createdByUid &&
+        incoming().createdAt == existing().createdAt &&
+        isAdmin() &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['districtLabelTe']);
+      allow delete: if isSignedIn() && isValidId(locationId) && isAdmin();
+    }
+  }
+}

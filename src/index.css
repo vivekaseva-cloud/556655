@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Noto Sans Telugu', 'Noto Sans Devanagari', 'Plus Jakarta Sans', sans-serif;
+  --font-serif: 'Noto Sans Telugu', 'Noto Sans Devanagari', 'Playfair Display', serif;
+  --font-mono: 'JetBrains Mono', 'Noto Sans Telugu', 'Noto Sans Devanagari', monospace;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: #FBF9F5;
+    color: #1C1917;
+  }
+
+  h1, h2, h3, .font-editorial {
+    font-family: var(--font-serif);
+    text-wrap: balance;
+  }
+}

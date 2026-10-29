@@ -1,0 +1,352 @@
+{
+  "entities": {
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted administrator record for RBAC verification",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "NewsArticle": {
+      "title": "NewsArticle",
+      "description": "Multilingual news article assigned to National, State, District, or Mandal level",
+      "type": "object",
+      "properties": {
+        "titleTe": { "type": "string", "minLength": 3, "maxLength": 300 },
+        "titleHi": { "type": "string", "minLength": 3, "maxLength": 300 },
+        "titleEn": { "type": "string", "minLength": 3, "maxLength": 300 },
+        "summaryTe": { "type": "string", "minLength": 5, "maxLength": 600 },
+        "summaryHi": { "type": "string", "minLength": 5, "maxLength": 600 },
+        "summaryEn": { "type": "string", "minLength": 5, "maxLength": 600 },
+        "contentTe": { "type": "string", "minLength": 10, "maxLength": 8000 },
+        "contentHi": { "type": "string", "minLength": 10, "maxLength": 8000 },
+        "contentEn": { "type": "string", "minLength": 10, "maxLength": 8000 },
+        "level": {
+          "type": "string",
+          "enum": ["national", "state", "district", "mandal"],
+          "maxLength": 20
+        },
+        "state": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "district": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "mandal": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "category": {
+          "type": "string",
+          "enum": ["politics", "agriculture", "crime", "education", "business", "local", "justice"],
+          "maxLength": 30
+        },
+        "youtubeUrl": { "type": "string", "maxLength": 300 },
+        "imageType": { "type": "string", "maxLength": 60 },
+        "reporterId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reporterName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "views": { "type": "integer" },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "maxLength": 20
+        },
+        "authorUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "titleTe",
+        "titleHi",
+        "titleEn",
+        "summaryTe",
+        "summaryHi",
+        "summaryEn",
+        "contentTe",
+        "contentHi",
+        "contentEn",
+        "level",
+        "state",
+        "district",
+        "mandal",
+        "category",
+        "youtubeUrl",
+        "imageType",
+        "reporterId",
+        "reporterName",
+        "views",
+        "status",
+        "authorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PublicReporterProfile": {
+      "title": "PublicReporterProfile",
+      "description": "Publicly visible Mandal reporter profile isolated from PII",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "username": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 60,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "state": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "district": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "mandal": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "photoDataUrl": { "type": "string", "maxLength": 150000 },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "maxLength": 20
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "name",
+        "username",
+        "state",
+        "district",
+        "mandal",
+        "photoDataUrl",
+        "status",
+        "ownerUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PrivateReporterApplication": {
+      "title": "PrivateReporterApplication",
+      "description": "Isolated PII record containing reporter Aadhaar and mobile details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "username": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 60,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "passwordHash": { "type": "string", "minLength": 4, "maxLength": 128 },
+        "mobile": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 15,
+          "pattern": "^[0-9+\\-]+$"
+        },
+        "aadhaarNumber": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 16,
+          "pattern": "^[0-9\\s\\-]+$"
+        },
+        "aadhaarDocName": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "aadhaarDocDataUrl": { "type": "string", "maxLength": 150000 },
+        "state": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "district": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "mandal": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "photoDataUrl": { "type": "string", "maxLength": 150000 },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "maxLength": 20
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "name",
+        "username",
+        "passwordHash",
+        "mobile",
+        "aadhaarNumber",
+        "aadhaarDocName",
+        "aadhaarDocDataUrl",
+        "state",
+        "district",
+        "mandal",
+        "photoDataUrl",
+        "status",
+        "ownerUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PrivateAd": {
+      "title": "PrivateAd",
+      "description": "Categorized and geographically targeted private advertisement",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 3, "maxLength": 160 },
+        "sponsorName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "targetLevel": {
+          "type": "string",
+          "enum": ["national", "state", "district", "mandal"],
+          "maxLength": 20
+        },
+        "state": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "district": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "mandal": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "category": {
+          "type": "string",
+          "enum": ["all", "politics", "agriculture", "crime", "education", "business", "local", "justice"],
+          "maxLength": 30
+        },
+        "ctaUrl": { "type": "string", "maxLength": 300 },
+        "bannerText": { "type": "string", "minLength": 5, "maxLength": 500 },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "maxLength": 20
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "title",
+        "sponsorName",
+        "targetLevel",
+        "state",
+        "district",
+        "mandal",
+        "category",
+        "ctaUrl",
+        "bannerText",
+        "status",
+        "ownerUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserFeedback": {
+      "title": "UserFeedback",
+      "description": "Reader feedback and rating submission",
+      "type": "object",
+      "properties": {
+        "readerName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "mandal": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "rating": { "type": "integer" },
+        "message": { "type": "string", "minLength": 5, "maxLength": 1000 },
+        "category": { "type": "string", "minLength": 2, "maxLength": 50 },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["readerName", "mandal", "rating", "message", "category", "ownerUid", "createdAt"]
+    },
+    "SiteConfig": {
+      "title": "SiteConfig",
+      "description": "Global site configuration including Google AdSense integration",
+      "type": "object",
+      "properties": {
+        "adsenseClientId": { "type": "string", "maxLength": 100 },
+        "adsenseSlotId": { "type": "string", "maxLength": 100 },
+        "adsenseScriptUrl": { "type": "string", "maxLength": 300 },
+        "adsenseEnabled": { "type": "boolean" },
+        "updatedByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "adsenseClientId",
+        "adsenseSlotId",
+        "adsenseScriptUrl",
+        "adsenseEnabled",
+        "updatedByUid",
+        "updatedAt"
+      ]
+    },
+    "CustomLocationRecord": {
+      "title": "CustomLocationRecord",
+      "description": "Admin-managed custom District and Mandal addition for any Indian State",
+      "type": "object",
+      "properties": {
+        "state": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "district": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "districtLabelTe": { "type": "string", "maxLength": 100 },
+        "mandal": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "createdByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["state", "district", "districtLabelTe", "mandal", "createdByUid", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminUid}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Trusted administrator records"
+    },
+    "/news/{newsId}": {
+      "schema": { "$ref": "#/entities/NewsArticle" },
+      "description": "Multilingual news articles across National, State, District, and Mandal levels"
+    },
+    "/reporterDirectory/{reporterId}": {
+      "schema": { "$ref": "#/entities/PublicReporterProfile" },
+      "description": "Publicly readable Mandal reporter directory free of PII"
+    },
+    "/reporterApplications/{appId}": {
+      "schema": { "$ref": "#/entities/PrivateReporterApplication" },
+      "description": "PII-isolated reporter applications containing Aadhaar and mobile numbers"
+    },
+    "/ads/{adId}": {
+      "schema": { "$ref": "#/entities/PrivateAd" },
+      "description": "Targeted private advertisements"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": { "$ref": "#/entities/UserFeedback" },
+      "description": "Reader feedback submissions"
+    },
+    "/siteSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/SiteConfig" },
+      "description": "Global site configuration for Google AdSense"
+    },
+    "/customLocations/{locationId}": {
+      "schema": { "$ref": "#/entities/CustomLocationRecord" },
+      "description": "Admin-added custom Districts and Mandals across Indian States"
+    }
+  }
+}
